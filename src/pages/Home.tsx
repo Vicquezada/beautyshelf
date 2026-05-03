@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { differenceInDays, parseISO, format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Plus, AlertTriangle, Package, BookOpen, TrendingDown, LogOut } from 'lucide-react'
+import { Plus, AlertTriangle, Package, BookOpen, TrendingDown, LogOut, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { ProductCard } from '../components/products/ProductCard'
 import { AddProductModal } from '../components/products/AddProductModal'
-import { Badge } from '../components/ui/Badge'
 import { Loading } from '../components/ui/Loading'
+import { Badge } from '../components/ui/Badge'
 import type { Product } from '../types'
 import { useAuth } from '../hooks/useAuth'
 
@@ -31,6 +32,7 @@ export function Home({
 }: HomeProps) {
   const [addOpen, setAddOpen] = useState(false)
   const { signOut, user } = useAuth()
+  const navigate = useNavigate()
 
   const expiring = products.filter(p => {
     if (!p.expiry_date) return false
@@ -72,43 +74,67 @@ export function Home({
         <div className="space-y-6">
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="card p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Package size={16} className="text-warm-500" />
-                <span className="text-xs text-warm-500">Prodotti</span>
+            <button
+              onClick={() => navigate('/magazzino')}
+              className="card p-4 text-left active:scale-[0.97] transition-transform"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Package size={16} className="text-warm-500" />
+                  <span className="text-xs text-warm-500">Prodotti</span>
+                </div>
+                <ChevronRight size={14} className="text-warm-300" />
               </div>
               <p className="font-display text-3xl font-semibold text-warm-900">{products.length}</p>
-            </div>
+            </button>
 
-            <div className={`card p-4 ${expired.length > 0 ? 'border-l-4 border-l-red-400' : ''}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle size={16} className={expired.length > 0 ? 'text-red-500' : 'text-warm-500'} />
-                <span className="text-xs text-warm-500">In scadenza</span>
+            <button
+              onClick={() => navigate('/magazzino', { state: { filter: 'expiring' } })}
+              className={`card p-4 text-left active:scale-[0.97] transition-transform ${expired.length > 0 ? 'border-l-4 border-l-red-400' : ''}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={16} className={expired.length > 0 ? 'text-red-500' : 'text-warm-500'} />
+                  <span className="text-xs text-warm-500">In scadenza</span>
+                </div>
+                <ChevronRight size={14} className="text-warm-300" />
               </div>
               <p className={`font-display text-3xl font-semibold ${expired.length > 0 ? 'text-red-600' : 'text-warm-900'}`}>
                 {expiring.length + expired.length}
               </p>
-            </div>
+            </button>
 
-            <div className={`card p-4 ${normativeAlerts > 0 ? 'border-l-4 border-l-amber-400' : ''}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen size={16} className={normativeAlerts > 0 ? 'text-amber-500' : 'text-warm-500'} />
-                <span className="text-xs text-warm-500">Alert normative</span>
+            <button
+              onClick={() => navigate('/normative', { state: { filter: 'impattanti' } })}
+              className={`card p-4 text-left active:scale-[0.97] transition-transform ${normativeAlerts > 0 ? 'border-l-4 border-l-amber-400' : ''}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={16} className={normativeAlerts > 0 ? 'text-amber-500' : 'text-warm-500'} />
+                  <span className="text-xs text-warm-500">Alert normative</span>
+                </div>
+                <ChevronRight size={14} className="text-warm-300" />
               </div>
               <p className={`font-display text-3xl font-semibold ${normativeAlerts > 0 ? 'text-amber-600' : 'text-warm-900'}`}>
                 {normativeAlerts}
               </p>
-            </div>
+            </button>
 
-            <div className={`card p-4 ${lowStock.length > 0 ? 'border-l-4 border-l-amber-400' : ''}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingDown size={16} className={lowStock.length > 0 ? 'text-amber-500' : 'text-warm-500'} />
-                <span className="text-xs text-warm-500">Quasi finiti</span>
+            <button
+              onClick={() => navigate('/magazzino', { state: { filter: 'bassa' } })}
+              className={`card p-4 text-left active:scale-[0.97] transition-transform ${lowStock.length > 0 ? 'border-l-4 border-l-amber-400' : ''}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <TrendingDown size={16} className={lowStock.length > 0 ? 'text-amber-500' : 'text-warm-500'} />
+                  <span className="text-xs text-warm-500">Quasi finiti</span>
+                </div>
+                <ChevronRight size={14} className="text-warm-300" />
               </div>
               <p className={`font-display text-3xl font-semibold ${lowStock.length > 0 ? 'text-amber-600' : 'text-warm-900'}`}>
                 {lowStock.length}
               </p>
-            </div>
+            </button>
           </div>
 
           {/* Expired alert */}

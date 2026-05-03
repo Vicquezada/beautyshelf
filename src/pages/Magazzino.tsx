@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
-import { Search, Plus, X, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, X } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
+import { differenceInDays, parseISO } from 'date-fns'
 import { Layout } from '../components/layout/Layout'
 import { ProductCard } from '../components/products/ProductCard'
 import { AddProductModal } from '../components/products/AddProductModal'
@@ -25,6 +27,9 @@ interface MagazzinoProps {
 }
 
 export function Magazzino({ products, loading, onAddProduct, onQuantityChange, onUpdateProduct, onDeleteProduct }: MagazzinoProps) {
+  const location = useLocation()
+  const locationFilter = (location.state as { filter?: string } | null)?.filter ?? null
+
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('Tutti')
   const [addOpen, setAddOpen] = useState(false)
@@ -37,6 +42,14 @@ export function Magazzino({ products, loading, onAddProduct, onQuantityChange, o
         f => f?.toLowerCase().includes(search.toLowerCase())
       )
       const matchCat = category === 'Tutti' || p.category === category
+
+      if (locationFilter === 'bassa') return matchSearch && p.quantity === 'bassa'
+      if (locationFilter === 'expiring') {
+        if (!p.expiry_date) return false
+        const days = differenceInDays(parseISO(p.expiry_date), new Date())
+        return matchSearch && days <= 60
+      }
+
       return matchSearch && matchCat
     })
   }, [products, search, category])

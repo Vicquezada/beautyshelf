@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
 import { Layout } from '../components/layout/Layout'
 import { NormativaCard } from '../components/normative/NormativaCard'
@@ -14,7 +15,9 @@ interface NormativeProps {
 }
 
 export function Normative({ normative, loading, getAffectedProducts }: NormativeProps) {
-  const [filter, setFilter] = useState<Filter>('tutte')
+  const location = useLocation()
+  const initialFilter = ((location.state as { filter?: string } | null)?.filter ?? 'tutte') as Filter
+  const [filter, setFilter] = useState<Filter>(initialFilter)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const filters: { key: Filter; label: string }[] = [
