@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply font-body text-warm-900 bg-cream-50 antialiased;
+    overscroll-behavior: none;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply mx-auto max-w-app min-h-screen bg-cream-50 relative;
+  }
+
+  .page-content {
+    @apply px-4 pt-4 pb-24;
+  }
+
+  .section-title {
+    @apply font-display text-xl font-semibold text-warm-900 tracking-tight;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-cream-200 shadow-sm;
+  }
+
+  .badge-urgente {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+
+  .badge-attenzione {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  .badge-info {
+    @apply bg-blue-50 text-blue-600 border border-blue-200;
+  }
+
+  .badge-alta {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+
+  .badge-media {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  .badge-bassa {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
