@@ -22,6 +22,7 @@ export function PhotoCapture({ onResult, onError, token }: PhotoCaptureProps) {
   const [photos, setPhotos] = useState<Partial<Record<PhotoSlot, { file: File; preview: string }>>>({})
   const [analyzing, setAnalyzing] = useState(false)
   const [needsBottom, setNeedsBottom] = useState(false)
+  const [partialResult, setPartialResult] = useState<ClaudeProductResult | null>(null)
   const inputRefs = useRef<Partial<Record<PhotoSlot, HTMLInputElement>>>({})
 
   const handleCapture = async (slot: PhotoSlot, file: File) => {
@@ -49,6 +50,7 @@ export function PhotoCapture({ onResult, onError, token }: PhotoCaptureProps) {
       const result = await analyzeProductImages(images, token)
 
       if (!result.expiry_found && !needsBottom) {
+        setPartialResult(result)
         setNeedsBottom(true)
         setAnalyzing(false)
         return
@@ -62,13 +64,27 @@ export function PhotoCapture({ onResult, onError, token }: PhotoCaptureProps) {
     }
   }
 
+  const handleSkip = () => {
+    if (partialResult) {
+      onResult({ ...partialResult, expiry_found: true, expiry_date: null })
+    }
+  }
+
   const slots: PhotoSlot[] = needsBottom ? ['front', 'back', 'bottom'] : ['front', 'back']
 
   return (
     <div className="space-y-4">
       {needsBottom && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-          Data scadenza non trovata. Aggiungi anche la foto del fondo del prodotto.
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+          <p className="text-sm text-amber-800">
+            Data scadenza non trovata. Aggiungi la foto del fondo oppure salta se il prodotto non ha scadenza.
+          </p>
+          <button
+            onClick={handleSkip}
+            className="text-xs font-medium text-amber-700 underline underline-offset-2"
+          >
+            Salta — questo prodotto non ha data di scadenza
+          </button>
         </div>
       )}
 
