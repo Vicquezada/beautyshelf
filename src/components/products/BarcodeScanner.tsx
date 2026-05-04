@@ -113,7 +113,7 @@ export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
 
       {scanning && (
         <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
-          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
+          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-56 h-32 border-2 border-white rounded-xl opacity-70" />
           </div>
