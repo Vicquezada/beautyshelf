@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { Scan, Keyboard, Loader2, AlertCircle } from 'lucide-react'
+import { BrowserMultiFormatReader } from '@zxing/browser'
+import { NotFoundException } from '@zxing/library'
 import { Button } from '../ui/Button'
 import { lookupBarcode } from '../../lib/openbeauty'
 import type { ClaudeProductResult } from '../../types'
@@ -11,16 +13,13 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
+  const readerRef = useRef<BrowserMultiFormatReader | null>(null)
+  const controlsRef = useRef<{ stop: () => void } | null>(null)
   const [scanning, setScanning] = useState(false)
   const [manualMode, setManualMode] = useState(false)
   const [manualCode, setManualCode] = useState('')
   const [looking, setLooking] = useState(false)
   const [notFound, setNotFound] = useState(false)
-  const detectorRef = useRef<BarcodeDetector | null>(null)
-  const rafRef = useRef<number>(0)
-
-  const supported = typeof BarcodeDetector !== 'undefined'
 
   useEffect(() => {
     return () => {
@@ -29,56 +28,38 @@ export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
   }, [])
 
   const stopCamera = () => {
-    cancelAnimationFrame(rafRef.current)
-    streamRef.current?.getTracks().forEach(t => t.stop())
-    streamRef.current = null
+    controlsRef.current?.stop()
+    controlsRef.current = null
+    readerRef.current = null
   }
 
   const startScanner = async () => {
     setNotFound(false)
     setScanning(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      })
-      streamRef.current = stream
+      const reader = new BrowserMultiFormatReader()
+      readerRef.current = reader
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-
-      detectorRef.current = new BarcodeDetector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'],
-      })
-
-      detectLoop()
+      const controls = await reader.decodeFromConstraints(
+        { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+        videoRef.current!,
+        (result, error) => {
+          if (result) {
+            const code = result.getText()
+            stopCamera()
+            setScanning(false)
+            handleBarcode(code)
+          }
+          if (error && !(error instanceof NotFoundException)) {
+            // ignore NotFoundException — it just means no barcode in frame yet
+          }
+        }
+      )
+      controlsRef.current = controls
     } catch {
       setScanning(false)
       setManualMode(true)
     }
-  }
-
-  const detectLoop = async () => {
-    if (!videoRef.current || !detectorRef.current) return
-    if (videoRef.current.readyState < 2) {
-      rafRef.current = requestAnimationFrame(detectLoop)
-      return
-    }
-
-    try {
-      const barcodes = await detectorRef.current.detect(videoRef.current)
-      if (barcodes.length > 0) {
-        const code = barcodes[0].rawValue
-        stopCamera()
-        setScanning(false)
-        await handleBarcode(code)
-        return
-      }
-    } catch {
-      // continue loop
-    }
-    rafRef.current = requestAnimationFrame(detectLoop)
   }
 
   const handleBarcode = async (code: string) => {
@@ -150,24 +131,18 @@ export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
 
       {!scanning && !manualMode && (
         <div className="space-y-3">
-          {supported ? (
-            <button
-              onClick={startScanner}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-cream-200 bg-white hover:border-cream-400 active:scale-[0.98] transition-all"
-            >
-              <div className="w-12 h-12 rounded-xl bg-warm-900 flex items-center justify-center">
-                <Scan size={22} className="text-white" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-warm-900">Scansiona barcode</p>
-                <p className="text-xs text-warm-500">Punta la camera sul codice EAN del prodotto</p>
-              </div>
-            </button>
-          ) : (
-            <div className="bg-cream-50 border border-cream-200 rounded-xl p-3 text-xs text-warm-500 text-center">
-              Scansione non supportata su questo browser. Usa l'inserimento manuale.
+          <button
+            onClick={startScanner}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-cream-200 bg-white hover:border-cream-400 active:scale-[0.98] transition-all"
+          >
+            <div className="w-12 h-12 rounded-xl bg-warm-900 flex items-center justify-center">
+              <Scan size={22} className="text-white" />
             </div>
-          )}
+            <div className="text-left">
+              <p className="font-medium text-warm-900">Scansiona barcode</p>
+              <p className="text-xs text-warm-500">Punta la camera sul codice EAN del prodotto</p>
+            </div>
+          </button>
 
           <button
             onClick={() => setManualMode(true)}
