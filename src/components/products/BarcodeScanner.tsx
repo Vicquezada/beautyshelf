@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Scan, Keyboard, Loader2, AlertCircle } from 'lucide-react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
-import { NotFoundException } from '@zxing/library'
 import { Button } from '../ui/Button'
 import { lookupBarcode } from '../../lib/openbeauty'
 import type { ClaudeProductResult } from '../../types'
@@ -13,8 +12,10 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const rafRef = useRef<number>(0)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
-  const controlsRef = useRef<{ stop: () => void } | null>(null)
   const [scanning, setScanning] = useState(false)
   const [manualMode, setManualMode] = useState(false)
   const [manualCode, setManualCode] = useState('')
@@ -22,44 +23,64 @@ export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    return () => {
-      stopCamera()
-    }
+    readerRef.current = new BrowserMultiFormatReader()
+    return () => stopCamera()
   }, [])
 
   const stopCamera = () => {
-    controlsRef.current?.stop()
-    controlsRef.current = null
-    readerRef.current = null
+    cancelAnimationFrame(rafRef.current)
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
   }
 
   const startScanner = async () => {
     setNotFound(false)
     setScanning(true)
     try {
-      const reader = new BrowserMultiFormatReader()
-      readerRef.current = reader
-
-      const controls = await reader.decodeFromConstraints(
-        { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
-        videoRef.current!,
-        (result, error) => {
-          if (result) {
-            const code = result.getText()
-            stopCamera()
-            setScanning(false)
-            handleBarcode(code)
-          }
-          if (error && !(error instanceof NotFoundException)) {
-            // ignore NotFoundException — it just means no barcode in frame yet
-          }
-        }
-      )
-      controlsRef.current = controls
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      })
+      streamRef.current = stream
+      const video = videoRef.current!
+      video.srcObject = stream
+      video.setAttribute('playsinline', 'true')
+      video.muted = true
+      await video.play()
+      scanLoop()
     } catch {
       setScanning(false)
       setManualMode(true)
     }
+  }
+
+  const scanLoop = () => {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const reader = readerRef.current
+    if (!video || !canvas || !reader) return
+    if (video.readyState < 2) {
+      rafRef.current = requestAnimationFrame(scanLoop)
+      return
+    }
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    ctx.drawImage(video, 0, 0)
+
+    try {
+      const result = reader.decodeFromCanvas(canvas)
+      if (result) {
+        stopCamera()
+        setScanning(false)
+        handleBarcode(result.getText())
+        return
+      }
+    } catch {
+      // no barcode in frame, continue
+    }
+    rafRef.current = requestAnimationFrame(scanLoop)
   }
 
   const handleBarcode = async (code: string) => {
@@ -114,6 +135,7 @@ export function BarcodeScanner({ onResult, onError }: BarcodeScannerProps) {
       {scanning && (
         <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
           <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
+          <canvas ref={canvasRef} className="hidden" />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-56 h-32 border-2 border-white rounded-xl opacity-70" />
           </div>
