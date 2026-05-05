@@ -33,7 +33,23 @@ export interface Normativa {
   severity: Severity
   affected_ingredients: string[] | null
   source: string | null
+  country: 'IT' | 'CH' | 'ALL'
   created_at: string
+}
+
+export type BusinessType = 'freelance' | 'salone'
+export type Country = 'IT' | 'CH'
+export type Specialization = 'viso' | 'corpo' | 'unghie' | 'epilazione' | 'massaggio' | 'trucco'
+
+export interface UserProfile {
+  id: string
+  display_name: string
+  business_type: BusinessType
+  country: Country
+  city: string | null
+  specializations: Specialization[]
+  created_at: string
+  updated_at: string
 }
 
 export interface UserSupplier {

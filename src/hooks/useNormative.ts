@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Normativa, Product } from '../types'
+import type { Country, Normativa, Product } from '../types'
 
-export function useNormative(products: Product[] = []) {
+export function useNormative(products: Product[] = [], country?: Country) {
   const [normative, setNormative] = useState<Normativa[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -11,10 +11,16 @@ export function useNormative(products: Product[] = []) {
     setLoading(true)
     setError(null)
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('normative')
         .select('*')
         .order('date', { ascending: false })
+
+      if (country) {
+        query = query.in('country', [country, 'ALL'])
+      }
+
+      const { data, error } = await query
       if (error) throw error
       setNormative(data ?? [])
     } catch (e) {
@@ -22,7 +28,7 @@ export function useNormative(products: Product[] = []) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [country])
 
   useEffect(() => { fetchNormative() }, [fetchNormative])
 

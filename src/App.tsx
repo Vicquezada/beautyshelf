@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import { useProfile } from './hooks/useProfile'
 import { useProducts } from './hooks/useProducts'
 import { useNormative } from './hooks/useNormative'
 import { useAnalytics } from './hooks/useAnalytics'
 import { Auth } from './pages/Auth'
+import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
 import { Magazzino } from './pages/Magazzino'
 import { Normative } from './pages/Normative'
@@ -12,11 +14,12 @@ import { Loading } from './components/ui/Loading'
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
+  const { profile, loading: profileLoading, saveProfile } = useProfile(user?.id)
   const { products, loading: productsLoading, addProduct, updateProduct, updateQuantity, deleteProduct } = useProducts()
-  const { normative, loading: normativeLoading, getAffectedProducts, relevantNormative } = useNormative(products)
+  const { normative, loading: normativeLoading, getAffectedProducts, relevantNormative } = useNormative(products, profile?.country)
   const { getConsumptionStats, getBrandStats, suppliers, priceAlerts, loading: analyticsLoading, addSupplier, deleteSupplier } = useAnalytics(products)
 
-  if (authLoading) {
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="app-shell flex items-center justify-center min-h-screen">
         <Loading text="BeautyShelf..." />
@@ -25,6 +28,8 @@ function AppContent() {
   }
 
   if (!user) return <Auth />
+
+  if (!profile) return <Onboarding onComplete={saveProfile} />
 
   const consumptionStats = getConsumptionStats()
   const brandStats = getBrandStats()
