@@ -47,6 +47,7 @@ function AppContent() {
             lastNormativa={lastNormativa}
             flaggedProducts={flaggedProducts}
             loadingProducts={productsLoading}
+            profile={profile}
             onAddProduct={async (p) => { await addProduct(p) }}
             onQuantityChange={updateQuantity}
           />

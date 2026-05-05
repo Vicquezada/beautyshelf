@@ -8,7 +8,7 @@ import { ProductCard } from '../components/products/ProductCard'
 import { AddProductModal } from '../components/products/AddProductModal'
 import { Loading } from '../components/ui/Loading'
 import { Badge } from '../components/ui/Badge'
-import type { Product } from '../types'
+import type { Product, UserProfile } from '../types'
 import { useAuth } from '../hooks/useAuth'
 
 interface HomeProps {
@@ -17,6 +17,7 @@ interface HomeProps {
   lastNormativa?: { title: string; severity: string; date: string } | null
   flaggedProducts: Product[]
   loadingProducts: boolean
+  profile: UserProfile | null
   onAddProduct: (product: Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>
   onQuantityChange: (id: string, quantity: 'alta' | 'media' | 'bassa') => void
 }
@@ -27,11 +28,12 @@ export function Home({
   lastNormativa,
   flaggedProducts,
   loadingProducts,
+  profile,
   onAddProduct,
   onQuantityChange,
 }: HomeProps) {
   const [addOpen, setAddOpen] = useState(false)
-  const { signOut, user } = useAuth()
+  const { signOut } = useAuth()
   const navigate = useNavigate()
 
   const expiring = products.filter(p => {
@@ -54,8 +56,16 @@ export function Home({
   const header = (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-warm-900">BeautyShelf</h1>
-        <p className="text-xs text-warm-500 mt-0.5">{user?.email}</p>
+        {profile?.first_name ? (
+          <>
+            <p className="text-xs text-warm-400 font-medium uppercase tracking-wide mb-0.5">BeautyShelf</p>
+            <h1 className="font-display text-2xl font-semibold text-warm-900">
+              Ciao, {profile.first_name} 👋
+            </h1>
+          </>
+        ) : (
+          <h1 className="font-display text-2xl font-semibold text-warm-900">BeautyShelf</h1>
+        )}
       </div>
       <button
         onClick={() => signOut()}

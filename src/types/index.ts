@@ -40,10 +40,13 @@ export interface Normativa {
 export type BusinessType = 'freelance' | 'salone'
 export type Country = 'IT' | 'CH'
 export type Specialization = 'viso' | 'corpo' | 'unghie' | 'epilazione' | 'massaggio' | 'trucco'
+export type Gender = 'F' | 'M' | 'N'
 
 export interface UserProfile {
   id: string
   display_name: string
+  first_name: string | null
+  gender: Gender
   business_type: BusinessType
   country: Country
   city: string | null

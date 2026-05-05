@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Scissors, Store, MapPin, Sparkles } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import type { BusinessType, Country, Specialization, UserProfile } from '../types'
+import type { BusinessType, Country, Gender, Specialization, UserProfile } from '../types'
 
 interface OnboardingProps {
   onComplete: (values: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
@@ -16,8 +16,22 @@ const SPECIALIZATIONS: { key: Specialization; label: string; emoji: string }[] =
   { key: 'trucco', label: 'Make-up', emoji: '💄' },
 ]
 
+const GENDERS: { key: Gender; label: string; sub: string }[] = [
+  { key: 'F', label: 'Femminile', sub: 'Benvenuta' },
+  { key: 'M', label: 'Maschile', sub: 'Benvenuto' },
+  { key: 'N', label: 'Neutro', sub: 'Benvenuto/a' },
+]
+
+export function greeting(gender: Gender): string {
+  if (gender === 'F') return 'Benvenuta'
+  if (gender === 'M') return 'Benvenuto'
+  return 'Benvenuto/a'
+}
+
 export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [firstName, setFirstName] = useState('')
+  const [gender, setGender] = useState<Gender | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [businessType, setBusinessType] = useState<BusinessType | null>(null)
   const [country, setCountry] = useState<Country | null>(null)
@@ -31,15 +45,19 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
     )
 
-  const canNext1 = displayName.trim().length >= 2 && businessType !== null
+  const canNext1 = firstName.trim().length >= 2 && gender !== null && displayName.trim().length >= 2 && businessType !== null
   const canNext2 = country !== null
 
+  const welcomeText = gender ? greeting(gender) : 'Benvenuta/o'
+
   const handleFinish = async () => {
-    if (!country || !businessType) return
+    if (!country || !businessType || !gender) return
     setLoading(true)
     setError(null)
     try {
       await onComplete({
+        first_name: firstName.trim(),
+        gender,
         display_name: displayName.trim(),
         business_type: businessType,
         country,
@@ -70,24 +88,56 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       {step === 1 && (
         <div className="flex-1 space-y-6">
           <div>
-            <h1 className="font-display text-3xl font-semibold text-warm-900 mb-1">Benvenuta 👋</h1>
+            <h1 className="font-display text-3xl font-semibold text-warm-900 mb-1">Ciao! 👋</h1>
             <p className="text-warm-500 text-sm">Parliamo un po' di te per personalizzare l'app.</p>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">
-              Come si chiama il tuo studio / salone?
-            </label>
+          {/* Nome */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">Il tuo nome</label>
             <input
-              value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
-              placeholder="es. Studio Estetica Marta"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              placeholder="es. Sara"
               className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
               autoFocus
             />
           </div>
 
-          <div className="space-y-3">
+          {/* Genere */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">Come preferisci essere chiamata/o?</label>
+            <div className="grid grid-cols-3 gap-2">
+              {GENDERS.map(g => (
+                <button
+                  key={g.key}
+                  onClick={() => setGender(g.key)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${
+                    gender === g.key
+                      ? 'border-warm-900 bg-warm-900 text-white'
+                      : 'border-cream-200 bg-white text-warm-700'
+                  }`}
+                >
+                  <span className="text-xs font-medium">{g.label}</span>
+                  <span className={`text-[10px] ${gender === g.key ? 'text-white/70' : 'text-warm-400'}`}>{g.sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Nome studio */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">Nome studio / salone</label>
+            <input
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              placeholder="es. Studio Estetica Sara"
+              className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
+            />
+          </div>
+
+          {/* Tipo */}
+          <div className="space-y-2">
             <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">Lavori come...</label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -100,9 +150,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               >
                 <Scissors size={24} />
                 <span className="text-sm font-medium">Freelance</span>
-                <span className={`text-xs ${businessType === 'freelance' ? 'text-white/70' : 'text-warm-400'}`}>
-                  Lavoro in autonomia
-                </span>
+                <span className={`text-xs ${businessType === 'freelance' ? 'text-white/70' : 'text-warm-400'}`}>Lavoro in autonomia</span>
               </button>
               <button
                 onClick={() => setBusinessType('salone')}
@@ -114,20 +162,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               >
                 <Store size={24} />
                 <span className="text-sm font-medium">Salone</span>
-                <span className={`text-xs ${businessType === 'salone' ? 'text-white/70' : 'text-warm-400'}`}>
-                  Ho uno studio fisso
-                </span>
+                <span className={`text-xs ${businessType === 'salone' ? 'text-white/70' : 'text-warm-400'}`}>Ho uno studio fisso</span>
               </button>
             </div>
           </div>
 
-          <div className="pt-4">
-            <Button
-              onClick={() => setStep(2)}
-              disabled={!canNext1}
-              size="lg"
-              className="w-full"
-            >
+          <div className="pt-2">
+            <Button onClick={() => setStep(2)} disabled={!canNext1} size="lg" className="w-full">
               Continua →
             </Button>
           </div>
@@ -142,7 +183,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <p className="text-warm-500 text-sm">Le normative cambiano in base al paese — mostreremo solo quelle rilevanti per te.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">Paese</label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -170,7 +211,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="text-xs font-medium text-warm-600 uppercase tracking-wide">
               Città <span className="text-warm-400 normal-case">(opzionale)</span>
             </label>
@@ -185,13 +226,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">
-              ← Indietro
-            </Button>
-            <Button onClick={() => setStep(3)} disabled={!canNext2} className="flex-1">
-              Continua →
-            </Button>
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">← Indietro</Button>
+            <Button onClick={() => setStep(3)} disabled={!canNext2} className="flex-1">Continua →</Button>
           </div>
         </div>
       )}
@@ -200,8 +237,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       {step === 3 && (
         <div className="flex-1 space-y-6">
           <div>
-            <h1 className="font-display text-3xl font-semibold text-warm-900 mb-1">Di cosa ti occupi?</h1>
-            <p className="text-warm-500 text-sm">Seleziona le tue specializzazioni — anche più di una.</p>
+            <h1 className="font-display text-3xl font-semibold text-warm-900 mb-1">{welcomeText}, {firstName}! ✨</h1>
+            <p className="text-warm-500 text-sm">Ultima cosa — le tue specializzazioni.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -222,25 +259,18 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
-              {error}
-            </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>
           )}
 
-          <div className="flex gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">
-              ← Indietro
-            </Button>
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setStep(2)} className="flex-1">← Indietro</Button>
             <Button onClick={handleFinish} loading={loading} className="flex-1">
               <Sparkles size={15} />
               Inizia →
             </Button>
           </div>
 
-          <button
-            onClick={handleFinish}
-            className="w-full text-xs text-warm-400 hover:text-warm-600 transition-colors"
-          >
+          <button onClick={handleFinish} className="w-full text-xs text-warm-400 hover:text-warm-600 transition-colors">
             Salta questo step
           </button>
         </div>
