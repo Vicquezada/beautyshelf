@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
+
+type Mode = 'login' | 'register' | 'reset'
 
 export function Auth() {
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -12,10 +15,28 @@ export function Auth() {
   const { signIn, signUp } = useAuth()
 
   const handleSubmit = async () => {
-    if (!email || !password) { setError('Email e password obbligatorie'); return }
-    setLoading(true)
     setError(null)
     setSuccess(null)
+
+    if (mode === 'reset') {
+      if (!email) { setError('Inserisci la tua email'); return }
+      setLoading(true)
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        })
+        if (error) throw error
+        setSuccess('Email inviata! Controlla la casella di posta per il link di reset.')
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Errore invio email')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    if (!email || !password) { setError('Email e password obbligatorie'); return }
+    setLoading(true)
     try {
       if (mode === 'login') {
         await signIn(email, password)
@@ -28,6 +49,12 @@ export function Auth() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const switchMode = (next: Mode) => {
+    setMode(next)
+    setError(null)
+    setSuccess(null)
   }
 
   return (
@@ -61,29 +88,54 @@ export function Auth() {
               onChange={e => setEmail(e.target.value)}
               placeholder="Email"
               autoComplete="email"
-              className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
             />
+            {mode !== 'reset' && (
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
+              />
+            )}
           </div>
 
+          {mode === 'login' && (
+            <div className="text-right -mt-1">
+              <button
+                onClick={() => switchMode('reset')}
+                className="text-xs text-warm-400 hover:text-warm-600 transition-colors"
+              >
+                Password dimenticata?
+              </button>
+            </div>
+          )}
+
           <Button onClick={handleSubmit} loading={loading} size="lg" className="w-full">
-            {mode === 'login' ? 'Accedi' : 'Crea account'}
+            {mode === 'login' && 'Accedi'}
+            {mode === 'register' && 'Crea account'}
+            {mode === 'reset' && 'Invia link di reset'}
           </Button>
 
-          <button
-            onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(null) }}
-            className="w-full text-sm text-warm-500 hover:text-warm-700 transition-colors"
-          >
-            {mode === 'login' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
-          </button>
+          {mode === 'reset' ? (
+            <button
+              onClick={() => switchMode('login')}
+              className="w-full text-sm text-warm-500 hover:text-warm-700 transition-colors"
+            >
+              ← Torna al login
+            </button>
+          ) : (
+            <button
+              onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+              className="w-full text-sm text-warm-500 hover:text-warm-700 transition-colors"
+            >
+              {mode === 'login' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
+            </button>
+          )}
         </div>
       </div>
     </div>
