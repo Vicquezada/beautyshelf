@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
 import { Layout } from '../components/layout/Layout'
 import { NormativaCard } from '../components/normative/NormativaCard'
+import { NormativaDetailModal } from '../components/normative/NormativaDetailModal'
 import { Loading } from '../components/ui/Loading'
 import type { Normativa, Product } from '../types'
 
@@ -18,7 +19,7 @@ export function Normative({ normative, loading, getAffectedProducts }: Normative
   const location = useLocation()
   const initialFilter = ((location.state as { filter?: string } | null)?.filter ?? 'tutte') as Filter
   const [filter, setFilter] = useState<Filter>(initialFilter)
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Normativa | null>(null)
 
   const filters: { key: Filter; label: string }[] = [
     { key: 'tutte', label: 'Tutte' },
@@ -74,12 +75,18 @@ export function Normative({ normative, loading, getAffectedProducts }: Normative
               key={n.id}
               normativa={n}
               affectedProducts={getAffectedProducts(n)}
-              expanded={expanded === n.id}
-              onPress={() => setExpanded(prev => prev === n.id ? null : n.id)}
+              expanded={false}
+              onPress={() => setSelected(n)}
             />
           ))}
         </div>
       )}
+
+      <NormativaDetailModal
+        normativa={selected}
+        affectedProducts={selected ? getAffectedProducts(selected) : []}
+        onClose={() => setSelected(null)}
+      />
     </Layout>
   )
 }
