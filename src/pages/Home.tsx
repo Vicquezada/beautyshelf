@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { differenceInDays, parseISO, format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Plus, AlertTriangle, Package, BookOpen, TrendingDown, LogOut, ChevronRight } from 'lucide-react'
+import { Plus, AlertTriangle, Package, BookOpen, TrendingDown, Settings, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { ProductCard } from '../components/products/ProductCard'
 import { AddProductModal } from '../components/products/AddProductModal'
+import { SettingsModal } from '../components/profile/SettingsModal'
 import { Loading } from '../components/ui/Loading'
 import { Badge } from '../components/ui/Badge'
 import type { Product, UserProfile } from '../types'
@@ -33,6 +34,7 @@ export function Home({
   onQuantityChange,
 }: HomeProps) {
   const [addOpen, setAddOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -68,10 +70,10 @@ export function Home({
         )}
       </div>
       <button
-        onClick={() => signOut()}
+        onClick={() => setSettingsOpen(true)}
         className="p-2 rounded-xl text-warm-400 hover:text-warm-700 hover:bg-cream-100 transition-colors"
       >
-        <LogOut size={18} />
+        <Settings size={18} />
       </button>
     </div>
   )
@@ -227,6 +229,13 @@ export function Home({
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onAdd={onAddProduct}
+      />
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        profile={profile}
+        onSignOut={signOut}
       />
     </Layout>
   )

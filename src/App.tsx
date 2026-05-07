@@ -10,6 +10,7 @@ import { Home } from './pages/Home'
 import { Magazzino } from './pages/Magazzino'
 import { Normative } from './pages/Normative'
 import { Analytics } from './pages/Analytics'
+import { Privacy } from './pages/Privacy'
 import { Loading } from './components/ui/Loading'
 
 function AppContent() {
@@ -91,6 +92,7 @@ function AppContent() {
           />
         }
       />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

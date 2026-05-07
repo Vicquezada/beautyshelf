@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
@@ -9,6 +10,7 @@ export function Auth() {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -36,6 +38,7 @@ export function Auth() {
     }
 
     if (!email || !password) { setError('Email e password obbligatorie'); return }
+    if (mode === 'register' && !privacyAccepted) { setError('Devi accettare la Privacy Policy per registrarti'); return }
     setLoading(true)
     try {
       if (mode === 'login') {
@@ -101,6 +104,23 @@ export function Auth() {
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 className="w-full px-4 py-3 text-sm border border-cream-200 rounded-xl bg-white focus:outline-none focus:border-cream-400 focus:ring-2 focus:ring-cream-100"
               />
+            )}
+            {mode === 'register' && (
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={e => setPrivacyAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-cream-300 accent-warm-900 shrink-0"
+                />
+                <span className="text-xs text-warm-500 leading-relaxed">
+                  Ho letto e accetto la{' '}
+                  <Link to="/privacy" className="text-warm-700 underline underline-offset-2 font-medium">
+                    Privacy Policy
+                  </Link>{' '}
+                  e il trattamento dei miei dati personali ai sensi del GDPR.
+                </span>
+              </label>
             )}
           </div>
 
