@@ -28,6 +28,9 @@ function AppContent() {
     )
   }
 
+  // Privacy accessible without auth
+  if (window.location.pathname === '/privacy') return <Privacy />
+
   if (!user) return <Auth />
 
   if (!profile) return <Onboarding onComplete={saveProfile} />
