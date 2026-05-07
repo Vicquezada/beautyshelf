@@ -35,7 +35,7 @@ export function Home({
 }: HomeProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const navigate = useNavigate()
 
   const expiring = products.filter(p => {
@@ -235,6 +235,7 @@ export function Home({
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         profile={profile}
+        userId={user?.id}
         onSignOut={signOut}
       />
     </Layout>

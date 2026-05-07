@@ -11,6 +11,7 @@ import { Magazzino } from './pages/Magazzino'
 import { Normative } from './pages/Normative'
 import { Analytics } from './pages/Analytics'
 import { Privacy } from './pages/Privacy'
+import { Terms } from './pages/Terms'
 import { Loading } from './components/ui/Loading'
 
 function AppContent() {
@@ -30,6 +31,7 @@ function AppContent() {
 
   // Privacy accessible without auth
   if (window.location.pathname === '/privacy') return <Privacy />
+  if (window.location.pathname === '/terms') return <Terms />
 
   if (!user) return <Auth />
 
@@ -96,6 +98,7 @@ function AppContent() {
         }
       />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

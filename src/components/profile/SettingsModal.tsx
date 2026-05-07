@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LogOut, Trash2, Shield, MapPin, Briefcase, User } from 'lucide-react'
+import { LogOut, Trash2, Shield, MapPin, Briefcase, User, Bell, BellOff } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { supabase } from '../../lib/supabase'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import type { UserProfile } from '../../types'
 
 interface SettingsModalProps {
   open: boolean
   onClose: () => void
   profile: UserProfile | null
+  userId: string | undefined
   onSignOut: () => void
 }
 
@@ -17,10 +19,11 @@ const countryLabel: Record<string, string> = { IT: '🇮🇹 Italia', CH: '🇨�
 const businessLabel: Record<string, string> = { freelance: 'Freelance', salone: 'Salone' }
 const genderLabel: Record<string, string> = { F: 'Femminile', M: 'Maschile', N: 'Neutro' }
 
-export function SettingsModal({ open, onClose, profile, onSignOut }: SettingsModalProps) {
+export function SettingsModal({ open, onClose, profile, userId, onSignOut }: SettingsModalProps) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { permission, subscribed, subscribe } = usePushNotifications(userId)
 
   const handleDeleteAccount = async () => {
     setDeleting(true)
@@ -77,7 +80,30 @@ export function SettingsModal({ open, onClose, profile, onSignOut }: SettingsMod
           </div>
         )}
 
-        {/* Privacy */}
+        {/* Notifications */}
+        {'Notification' in window && (
+          <button
+            onClick={subscribe}
+            disabled={permission === 'denied' || subscribed}
+            className="w-full flex items-center gap-3 p-3 rounded-xl border border-cream-200 bg-white hover:border-cream-400 transition-colors disabled:opacity-50"
+          >
+            {subscribed || permission === 'granted' ? (
+              <Bell size={16} className="text-emerald-500" />
+            ) : (
+              <BellOff size={16} className="text-warm-400" />
+            )}
+            <div className="text-left">
+              <p className="text-sm text-warm-700">
+                {subscribed ? 'Notifiche attive' : permission === 'denied' ? 'Notifiche bloccate' : 'Attiva notifiche scadenze'}
+              </p>
+              {!subscribed && permission !== 'denied' && (
+                <p className="text-xs text-warm-400">Avviso 7 e 30 giorni prima della scadenza</p>
+              )}
+            </div>
+          </button>
+        )}
+
+        {/* Privacy & Terms */}
         <Link
           to="/privacy"
           onClick={onClose}
@@ -85,6 +111,14 @@ export function SettingsModal({ open, onClose, profile, onSignOut }: SettingsMod
         >
           <Shield size={16} className="text-warm-500" />
           <span className="text-sm text-warm-700">Privacy Policy</span>
+        </Link>
+        <Link
+          to="/terms"
+          onClick={onClose}
+          className="flex items-center gap-3 p-3 rounded-xl border border-cream-200 bg-white hover:border-cream-400 transition-colors"
+        >
+          <Shield size={16} className="text-warm-500" />
+          <span className="text-sm text-warm-700">Termini di Servizio</span>
         </Link>
 
         {/* Logout */}

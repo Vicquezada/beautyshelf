@@ -118,7 +118,10 @@ export function Auth() {
                   <Link to="/privacy" className="text-warm-700 underline underline-offset-2 font-medium">
                     Privacy Policy
                   </Link>{' '}
-                  e il trattamento dei miei dati personali ai sensi del GDPR.
+                  e i{' '}
+                  <Link to="/terms" className="text-warm-700 underline underline-offset-2 font-medium">
+                    Termini di Servizio
+                  </Link>.
                 </span>
               </label>
             )}
