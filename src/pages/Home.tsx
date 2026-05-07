@@ -19,6 +19,7 @@ interface HomeProps {
   flaggedProducts: Product[]
   loadingProducts: boolean
   profile: UserProfile | null
+  onSaveProfile: (values: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
   onAddProduct: (product: Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>
   onQuantityChange: (id: string, quantity: 'alta' | 'media' | 'bassa') => void
 }
@@ -30,6 +31,7 @@ export function Home({
   flaggedProducts,
   loadingProducts,
   profile,
+  onSaveProfile,
   onAddProduct,
   onQuantityChange,
 }: HomeProps) {
@@ -237,6 +239,7 @@ export function Home({
         profile={profile}
         userId={user?.id}
         onSignOut={signOut}
+        onSaveProfile={onSaveProfile}
       />
     </Layout>
   )

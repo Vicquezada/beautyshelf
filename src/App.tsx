@@ -54,6 +54,7 @@ function AppContent() {
             flaggedProducts={flaggedProducts}
             loadingProducts={productsLoading}
             profile={profile}
+            onSaveProfile={saveProfile}
             onAddProduct={async (p) => { await addProduct(p) }}
             onQuantityChange={updateQuantity}
           />

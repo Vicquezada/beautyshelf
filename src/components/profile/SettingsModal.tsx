@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LogOut, Trash2, Shield, MapPin, Briefcase, User, Bell, BellOff } from 'lucide-react'
+import { LogOut, Trash2, Shield, MapPin, Briefcase, User, Bell, BellOff, Pencil } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { supabase } from '../../lib/supabase'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { EditProfileModal } from './EditProfileModal'
 import type { UserProfile } from '../../types'
 
 interface SettingsModalProps {
@@ -13,15 +14,17 @@ interface SettingsModalProps {
   profile: UserProfile | null
   userId: string | undefined
   onSignOut: () => void
+  onSaveProfile: (values: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
 }
 
 const countryLabel: Record<string, string> = { IT: '🇮🇹 Italia', CH: '🇨🇭 Svizzera' }
 const businessLabel: Record<string, string> = { freelance: 'Freelance', salone: 'Salone' }
 const genderLabel: Record<string, string> = { F: 'Femminile', M: 'Maschile', N: 'Neutro' }
 
-export function SettingsModal({ open, onClose, profile, userId, onSignOut }: SettingsModalProps) {
+export function SettingsModal({ open, onClose, profile, userId, onSignOut, onSaveProfile }: SettingsModalProps) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { permission, subscribed, subscribe } = usePushNotifications(userId)
 
@@ -55,9 +58,18 @@ export function SettingsModal({ open, onClose, profile, userId, onSignOut }: Set
         {/* Profile summary */}
         {profile && (
           <div className="bg-cream-50 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-warm-600 uppercase tracking-wide">
-              <User size={12} />
-              Il tuo profilo
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-medium text-warm-600 uppercase tracking-wide">
+                <User size={12} />
+                Il tuo profilo
+              </div>
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-1.5 text-xs text-warm-500 hover:text-warm-800 transition-colors"
+              >
+                <Pencil size={12} />
+                Modifica
+              </button>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-warm-800">
@@ -166,6 +178,15 @@ export function SettingsModal({ open, onClose, profile, userId, onSignOut }: Set
         </div>
 
       </div>
+
+      {profile && (
+        <EditProfileModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          profile={profile}
+          onSave={onSaveProfile}
+        />
+      )}
     </Modal>
   )
 }
