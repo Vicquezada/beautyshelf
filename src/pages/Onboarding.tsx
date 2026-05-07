@@ -14,6 +14,11 @@ const SPECIALIZATIONS: { key: Specialization; label: string; emoji: string }[] =
   { key: 'epilazione', label: 'Epilazione', emoji: '🪒' },
   { key: 'massaggio', label: 'Massaggio', emoji: '🤲' },
   { key: 'trucco', label: 'Make-up', emoji: '💄' },
+  { key: 'parrucchiere', label: 'Parrucchiere', emoji: '💇' },
+  { key: 'lash-brow', label: 'Lash & Brow', emoji: '👁️' },
+  { key: 'estetica-avanzata', label: 'Estetica avanzata', emoji: '💉' },
+  { key: 'benessere', label: 'Benessere / Spa', emoji: '🌿' },
+  { key: 'abbronzatura', label: 'Abbronzatura', emoji: '☀️' },
 ]
 
 const GENDERS: { key: Gender; label: string; sub: string }[] = [

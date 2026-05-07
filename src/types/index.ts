@@ -39,7 +39,7 @@ export interface Normativa {
 
 export type BusinessType = 'freelance' | 'salone'
 export type Country = 'IT' | 'CH'
-export type Specialization = 'viso' | 'corpo' | 'unghie' | 'epilazione' | 'massaggio' | 'trucco'
+export type Specialization = 'viso' | 'corpo' | 'unghie' | 'epilazione' | 'massaggio' | 'trucco' | 'parrucchiere' | 'benessere' | 'estetica-avanzata' | 'lash-brow' | 'abbronzatura'
 export type Gender = 'F' | 'M' | 'N'
 
 export interface UserProfile {
